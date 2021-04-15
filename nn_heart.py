@@ -6,17 +6,18 @@ Sequential Neural Network on Heart Disease dataset
 """
 import pandas as pd
 import numpy as np
-import sklearn as sk
 import sklearn.model_selection as skms
+from time import time
 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Activation, Dense
+from tensorflow.python.keras.callbacks import TensorBoard
 
 random_seed = 295471
 target_var = 'target'
-test_size = 0.20
+test_size = 0.10
 train_size = 1-test_size
 
 #----  reading data
@@ -43,12 +44,21 @@ print(f'> testing set = {X_test_rows} ({round(X_test_rows*1.0/rows,3)}) \n')
 
 #----  creating the model
 model = keras.Sequential()
-model.add(Dense(16, input_dim=13, activation='relu', name='layer1'))
-model.add(Dense(32, activation='relu', name='layer2'))
+model.add(keras.Input(shape=(13,)))
+model.add(Dense(26, activation='sigmoid', name='layer1'))
+model.add(Dense(26, activation='sigmoid', name='layer2'))
 model.add(Dense(1, activation='sigmoid', name='output_layer'))
-print(f'model = {model.summary()}')
 
-model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
-model.fit(X_train, y_train, epochs=1000, batch_size=24)
+tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+
+print(model.summary())
+print(f'input shape= {model.input_shape}')
+print(f'output shape= {model.output_shape}')
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(X_train, y_train, epochs=500, validation_split=0.15, verbose=1, callbacks=[tensorboard])
+
+test_set_loss, test_set_accuracy = model.evaluate(X_test, y_test)
+print(f'test set loss = {round(test_set_loss, 4)}  test set accuracy = {round(test_set_accuracy, 4)}')
 
 
